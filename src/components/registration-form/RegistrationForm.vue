@@ -1,5 +1,9 @@
 <template>
-  <SuccessfulSubmission v-if="progress.currentStep === Step.SuccessfulSubmission" />
+  <SuccessfulSubmission
+    v-if="progress.currentStep === Step.SuccessfulSubmission"
+    :full-name="fullName"
+    :profile-image="profileImageDisplayURL"
+  />
   <form
     v-else
     name="lottery_registration"
@@ -77,7 +81,10 @@
       submit
       @back="progress.currentStep--"
     >
-      <template #description>Profile image upload</template>
+      <template #description>
+        Thank you, {{ fullName }}!<br>
+        Please select a profile picture
+      </template>
       <div class="flex flex-col justify-center items-center h-full">
         <div class="h-56 w-5/6 relative flex items-center justify-center bg-slate-100/25 border-4 border-slate-100 rounded-md">
           <UploadIcon class="absolute w-16 mx-auto text-slate-200" />
@@ -90,6 +97,8 @@
             @change="selectFile"
           />
           <img
+            v-if="profileImageDisplayURL"
+            alt="Profile image"
             class="absolute object-cover w-full h-full rounded"
             :src="profileImageDisplayURL"
           />
@@ -142,6 +151,10 @@ export default defineComponent({
   }),
 
   computed: {
+    fullName (): string {
+      return `${this.form.name.first} ${this.form.name.last}`
+    },
+
     stepPrerequisites (): Record<Exclude<Step, Step.Initial>, boolean> {
       const { sex, name, email, profileImage, birthDate } = this.form
       return {
