@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 input {
-  @apply w-full h-10 my-2 p-2 border rounded-md;
+  @apply my-1.5 w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm
+    placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500
+    transition-colors duration-300;
 }
 
 input[type="radio"] {

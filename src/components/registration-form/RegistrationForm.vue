@@ -78,11 +78,23 @@
       @back="progress.currentStep--"
     >
       <template #description>Profile image upload</template>
-      <input
-        name="profile_image"
-        type="file"
-        @change="handleFile"
-      />
+      <div class="flex flex-col justify-center items-center h-full">
+        <div class="h-56 w-5/6 relative flex items-center justify-center bg-slate-100/25 border-4 border-slate-100 rounded-md">
+          <UploadIcon class="absolute w-16 mx-auto text-slate-200" />
+          <input
+            ref="fileInput"
+            name="profile_image"
+            type="file"
+            class="z-10 h-full w-full opacity-0"
+            accept="image/*"
+            @change="selectFile"
+          />
+          <img
+            class="absolute object-cover w-full h-full rounded"
+            :src="profileImageDisplayURL"
+          />
+        </div>
+      </div>
     </FormStep>
   </form>
 </template>
@@ -92,6 +104,7 @@ import { defineComponent } from 'vue'
 
 import FormStep from '@/components/patterns/form-step/FormStep.vue'
 import SuccessfulSubmission from '@/components/registration-form/SuccessfulSubmission.vue'
+import { UploadIcon } from '@heroicons/vue/solid'
 
 enum Step {
   Initial,
@@ -105,11 +118,13 @@ export default defineComponent({
 
   components: {
     FormStep,
+    UploadIcon,
     SuccessfulSubmission
   },
 
   data: () => ({
     Step,
+    profileImageDisplayURL: '',
     progress: {
       currentStep: Step.Initial,
       stepReached: Step.Initial
@@ -117,7 +132,7 @@ export default defineComponent({
     form: {
       sex: '',
       email: '',
-      photo: null,
+      profileImage: null as File | null,
       birthDate: null,
       name: {
         last: '',
@@ -128,17 +143,17 @@ export default defineComponent({
 
   computed: {
     stepPrerequisites (): Record<Exclude<Step, Step.Initial>, boolean> {
-      const { sex, email, photo, birthDate, name } = this.form
+      const { sex, name, email, profileImage, birthDate } = this.form
       return {
         [Step.PersonalDetails]: Boolean(email),
         [Step.ProfileImageUpload]: Boolean(sex && name.first && name.last && birthDate),
-        [Step.SuccessfulSubmission]: Boolean(photo)
+        [Step.SuccessfulSubmission]: Boolean(profileImage)
       }
     }
   },
 
   watch: {
-    currentStep (currentStep: Step): void {
+    'progress.currentStep' (currentStep: Step): void {
       if (currentStep > this.progress.stepReached) {
         this.progress.stepReached = currentStep
       }
@@ -147,11 +162,23 @@ export default defineComponent({
 
   methods: {
     submit (): void {
-      console.log('[submit]')
+      const stepPrerequisites = this.stepPrerequisites
+      const allPrerequisitesFullfilled = Object.values(stepPrerequisites).every(prerequisite => prerequisite)
+      if (!allPrerequisitesFullfilled) return
+
+      this.advanceStep()
+
+      try {
+        // TODO: post form
+      } catch (error) {
+        console.error(error)
+      }
     },
 
-    handleFile (event: Event): void {
-      console.log('[handleFile] event', event)
+    selectFile (): void {
+      const file = (this.$refs.fileInput as { files: Array<File> }).files[0]
+      this.form.profileImage = file
+      this.profileImageDisplayURL = URL.createObjectURL(file)
     },
 
     advanceStep (): void {
@@ -159,11 +186,11 @@ export default defineComponent({
       if (this.checkPrerequisites(nextStep)) {
         this.progress.currentStep++
       } else {
-        this.triggerError()
+        this.triggerErrors()
       }
     },
 
-    triggerError (): void {
+    triggerErrors (): void {
       console.log('[triggerError]')
     },
 

@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <section class="flex flex-col flex-1">
     <p>
       <slot name="description"></slot>
     </p>
