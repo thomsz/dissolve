@@ -1,8 +1,7 @@
 <template>
   <SuccessfulSubmission
     v-if="progress.currentStep === Step.SuccessfulSubmission"
-    :full-name="fullName"
-    :profile-image="profileImageDisplayURL"
+    :contestant="contestant"
   />
   <form
     v-else
@@ -109,11 +108,14 @@
 </template>
 
 <script lang="ts">
+import request from '@/services/request'
 import { defineComponent } from 'vue'
 
 import FormStep from '@/components/patterns/form-step/FormStep.vue'
 import SuccessfulSubmission from '@/components/registration-form/SuccessfulSubmission.vue'
 import { UploadIcon } from '@heroicons/vue/solid'
+
+import type Contestant from '@/types/Contestant'
 
 enum Step {
   Initial,
@@ -133,6 +135,7 @@ export default defineComponent({
 
   data: () => ({
     Step,
+    contestant: null as Contestant | null,
     profileImageDisplayURL: '',
     progress: {
       currentStep: Step.Initial,
@@ -141,8 +144,8 @@ export default defineComponent({
     form: {
       sex: '',
       email: '',
-      profileImage: null as File | null,
       birthDate: null,
+      profileImage: null as File | null,
       name: {
         last: '',
         first: ''
@@ -174,15 +177,16 @@ export default defineComponent({
   },
 
   methods: {
-    submit (): void {
+    async submit (): Promise<void> {
       const stepPrerequisites = this.stepPrerequisites
       const allPrerequisitesFullfilled = Object.values(stepPrerequisites).every(prerequisite => prerequisite)
       if (!allPrerequisitesFullfilled) return
 
-      this.advanceStep()
-
       try {
-        // TODO: post form
+        const response = await request.post('/contestants', this.form)
+        const contestant: Contestant = response.data
+        this.contestant = contestant
+        this.advanceStep()
       } catch (error) {
         console.error(error)
       }
