@@ -14,12 +14,14 @@
     "@heroicons/vue": "^1.0.6",
     "axios": "^0.27.2",
     "lodash": "^4.17.21",
+    "uuid": "^8.3.2",
     "vue": "^3.2.37"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
     "@types/lodash": "^4.14.182",
     "@types/node": "^16.11.47",
+    "@types/uuid": "^8.3.4",
     "@vitejs/plugin-vue": "^3.0.1",
     "@vue/eslint-config-typescript": "^11.0.0",
     "@vue/tsconfig": "^0.1.3",

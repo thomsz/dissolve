@@ -118,7 +118,7 @@
 import get from 'lodash/get'
 import request from '@/services/request'
 import { defineComponent } from 'vue'
-import { getFormData, populateDataFromSessionStorage } from '@/services/data'
+import { getFormData, flattenObject, populateDataFromSessionStorage } from '@/services/data'
 
 import FormStep from '@/components/patterns/form-step/FormStep.vue'
 import SuccessfulSubmission from '@/components/registration-form/SuccessfulSubmission.vue'
@@ -220,7 +220,7 @@ export default defineComponent({
   methods: {
     reset (): void {
       Object.assign(this.$data, initialData)
-      sessionStorage.clear()
+      this.resetDataFromSessionStorage()
     },
 
     async submit (): Promise<void> {
@@ -290,6 +290,13 @@ export default defineComponent({
 
     checkPrerequisites (step: Exclude<Step, Step.Initial>): boolean {
       return this.stepPrerequisites[step]
+    },
+
+    resetDataFromSessionStorage (): void {
+      const flattenedData = flattenObject(initialData)
+      Object.keys(flattenedData).forEach(key => {
+        sessionStorage.removeItem(key)
+      })
     }
   }
 })
