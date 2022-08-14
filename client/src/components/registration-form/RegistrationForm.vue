@@ -183,7 +183,12 @@ export default defineComponent({
       if (!allPrerequisitesFullfilled) return
 
       try {
-        const response = await request.post('/contestants', this.form)
+        const response = await request.post('/contestants', getFormData(this.form), {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
         const contestant: Contestant = response.data
         this.contestant = contestant
         this.advanceStep()

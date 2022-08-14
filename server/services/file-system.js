@@ -17,8 +17,9 @@ module.exports = {
         console.error(error)
         res.sendStatus(500)
       }
-  
+      
       callback && callback()
     })
-  }
+  },
+  BASE_URL: process.env.BASE_URL
 }
