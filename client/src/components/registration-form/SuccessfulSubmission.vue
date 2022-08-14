@@ -11,6 +11,7 @@
   <p>
     Your chances of winning a new car are 1:{{ totalContestants }}
   </p>
+  <button @click="$emit('reset')">Start a new application</button>
 </template>
 
 <script lang="ts">

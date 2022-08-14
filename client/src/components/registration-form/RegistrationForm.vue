@@ -2,6 +2,7 @@
   <SuccessfulSubmission
     v-if="contestant"
     :contestant="contestant"
+    @reset="reset"
   />
   <form
     v-else
@@ -21,6 +22,7 @@
         v-model="form.email"
         required
         placeholder="email@example.com"
+        @blur="persistData('form.email')"
       />
     </FormStep>
     <FormStep
@@ -39,6 +41,7 @@
           value="male"
           v-model="form.sex"
           required
+          @blur="persistData('form.sex')"
         />
         <label for="male">Male</label>
         <input
@@ -48,6 +51,7 @@
           value="female"
           v-model="form.sex"
           required
+          @blur="persistData('form.sex')"
         />
         <label for="female">Female</label>
       </div>
@@ -56,12 +60,14 @@
         v-model="form.name.first"
         required
         placeholder="First name"
+        @blur="persistData('form.name.first')"
       />
       <input
         name="last_name"
         v-model="form.name.last"
         required
         placeholder="Last name"
+        @blur="persistData('form.name.last')"
       />
       <input
         name="birth_date"
@@ -69,6 +75,7 @@
         v-model="form.birthDate"
         required
         :max="maxDate"
+        @blur="persistData('form.birthDate')"
       />
     </FormStep>
     <FormStep
@@ -108,9 +115,10 @@
 </template>
 
 <script lang="ts">
+import get from 'lodash/get'
 import request from '@/services/request'
-import { getFormData } from '@/services/data'
 import { defineComponent } from 'vue'
+import { getFormData, populateDataFromSessionStorage } from '@/services/data'
 
 import FormStep from '@/components/patterns/form-step/FormStep.vue'
 import SuccessfulSubmission from '@/components/registration-form/SuccessfulSubmission.vue'
@@ -125,6 +133,48 @@ enum Step {
   SubmittingForm
 }
 
+type FormData = {
+  Step: typeof Step
+  error: string
+  contestant: Contestant | null
+  profileImageDisplayURL: string
+  progress: {
+    currentStep: Step
+    stepReached: Step
+  }
+  form: {
+    sex: string
+    email: string
+    birthDate: string | null
+    profileImage: File | null
+    name: {
+      last: string
+      first: string
+    }
+  }
+}
+
+const initialData: FormData = {
+  Step,
+  error: '',
+  contestant: null as Contestant | null,
+  profileImageDisplayURL: '',
+  progress: {
+    currentStep: Step.Initial,
+    stepReached: Step.Initial
+  },
+  form: {
+    sex: '',
+    email: '',
+    birthDate: null,
+    profileImage: null as File | null,
+    name: {
+      last: '',
+      first: ''
+    }
+  }
+}
+
 export default defineComponent({
   name: 'RegistrationForm',
 
@@ -134,26 +184,7 @@ export default defineComponent({
     SuccessfulSubmission
   },
 
-  data: () => ({
-    Step,
-    error: '',
-    contestant: null as Contestant | null,
-    profileImageDisplayURL: '',
-    progress: {
-      currentStep: Step.Initial,
-      stepReached: Step.Initial
-    },
-    form: {
-      sex: '',
-      email: '',
-      birthDate: null,
-      profileImage: null as File | null,
-      name: {
-        last: '',
-        first: ''
-      }
-    }
-  }),
+  data: () => populateDataFromSessionStorage<FormData>(initialData),
 
   computed: {
     maxDate (): string {
@@ -177,14 +208,21 @@ export default defineComponent({
   watch: {
     'progress.currentStep' (currentStep: Step): void {
       this.resetError()
+      this.persistData('progress.currentStep')
 
       if (currentStep > this.progress.stepReached) {
         this.progress.stepReached = currentStep
+        this.persistData('progress.stepReached')
       }
     }
   },
 
   methods: {
+    reset (): void {
+      Object.assign(this.$data, initialData)
+      sessionStorage.clear()
+    },
+
     async submit (): Promise<void> {
       this.advanceStep()
       const stepPrerequisites = this.stepPrerequisites
@@ -200,6 +238,7 @@ export default defineComponent({
 
         const contestant: Contestant = response.data
         this.contestant = contestant
+        this.persistData('contestant')
       } catch (error) {
         console.error(error)
       }
@@ -219,6 +258,7 @@ export default defineComponent({
 
       this.form.profileImage = file
       this.profileImageDisplayURL = URL.createObjectURL(file)
+      this.persistData('form.profileImage', 'profileImageDisplayURL')
     },
 
     advanceStep (): void {
@@ -226,6 +266,17 @@ export default defineComponent({
       if (this.checkPrerequisites(nextStep)) {
         this.progress.currentStep++
       }
+    },
+
+    persistData (...keys: Array<string>): void {
+      keys.forEach(key => {
+        const value = get(this, key)
+        const preparedValue = typeof value === 'object' && !(value instanceof File)
+          ? JSON.stringify(value)
+          : value
+
+        sessionStorage.setItem(key, preparedValue)
+      })
     },
 
     validateFileSize (file: File): boolean {
