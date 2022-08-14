@@ -4,15 +4,11 @@
       <slot name="description"></slot>
     </p>
     <slot></slot>
+    <div class="text-red-400 text-center h-7">{{ errorMessage }}</div>
   </section>
   <nav class="h-24">
-    <button v-if="submit">Submit</button>
-    <button
-      v-if="next"
-      type="button"
-      @click="$emit('next')"
-    >
-      Next step
+    <button>
+      {{ cta }}
     </button>
     <button
       v-if="back"
@@ -27,23 +23,40 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
+import type { PropType } from 'vue'
+
 export default defineComponent({
   name: 'FormStep',
 
   props: {
-    next: Boolean,
     back: Boolean,
-    submit: Boolean,
+    errorMessage: String,
 
     name: {
       type: String,
       required: true
+    },
+
+    ctaType: {
+      type: String as PropType<'next' | 'submit'>,
+      default: 'next'
     }
   },
 
   data () {
     return {
       form: this.modelValue
+    }
+  },
+
+  computed: {
+    cta (): string {
+      const ctaLabels = {
+        next: 'Next step',
+        submit: 'Submit'
+      }
+
+      return ctaLabels[this.ctaType]
     }
   }
 })

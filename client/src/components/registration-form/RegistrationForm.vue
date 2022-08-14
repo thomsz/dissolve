@@ -1,6 +1,6 @@
 <template>
   <SuccessfulSubmission
-    v-if="progress.currentStep === Step.SuccessfulSubmission"
+    v-if="contestant"
     :contestant="contestant"
   />
   <form
@@ -12,8 +12,7 @@
     <FormStep
       v-if="progress.currentStep === Step.Initial"
       name="initial"
-      next
-      @next="advanceStep"
+      :error-message="error"
     >
       <template #description>Initial step</template>
       <input
@@ -27,9 +26,8 @@
     <FormStep
       v-if="progress.currentStep === Step.PersonalDetails"
       name="personal_details"
-      next
       back
-      @next="advanceStep"
+      :error-message="error"
       @back="progress.currentStep--"
     >
       <template #description>Personal details</template>
@@ -70,14 +68,15 @@
         type="date"
         v-model="form.birthDate"
         required
-        :max="new Date().toISOString()"
+        :max="maxDate"
       />
     </FormStep>
     <FormStep
       v-else-if="progress.currentStep === Step.ProfileImageUpload"
       name="profile_image_upload"
       back
-      submit
+      cta-type="submit"
+      :error-message="error"
       @back="progress.currentStep--"
     >
       <template #description>
@@ -93,6 +92,7 @@
             type="file"
             class="z-10 h-full w-full opacity-0"
             accept="image/*"
+            required
             @change="selectFile"
           />
           <img
@@ -109,6 +109,7 @@
 
 <script lang="ts">
 import request from '@/services/request'
+import { getFormData } from '@/services/data'
 import { defineComponent } from 'vue'
 
 import FormStep from '@/components/patterns/form-step/FormStep.vue'
@@ -121,7 +122,7 @@ enum Step {
   Initial,
   PersonalDetails,
   ProfileImageUpload,
-  SuccessfulSubmission
+  SubmittingForm
 }
 
 export default defineComponent({
@@ -135,6 +136,7 @@ export default defineComponent({
 
   data: () => ({
     Step,
+    error: '',
     contestant: null as Contestant | null,
     profileImageDisplayURL: '',
     progress: {
@@ -154,6 +156,10 @@ export default defineComponent({
   }),
 
   computed: {
+    maxDate (): string {
+      return new Date().toISOString().split('T')[0]
+    },
+
     fullName (): string {
       return `${this.form.name.first} ${this.form.name.last}`
     },
@@ -161,15 +167,17 @@ export default defineComponent({
     stepPrerequisites (): Record<Exclude<Step, Step.Initial>, boolean> {
       const { sex, name, email, profileImage, birthDate } = this.form
       return {
+        [Step.SubmittingForm]: Boolean(profileImage),
         [Step.PersonalDetails]: Boolean(email),
         [Step.ProfileImageUpload]: Boolean(sex && name.first && name.last && birthDate),
-        [Step.SuccessfulSubmission]: Boolean(profileImage)
       }
     }
   },
 
   watch: {
     'progress.currentStep' (currentStep: Step): void {
+      this.resetError()
+
       if (currentStep > this.progress.stepReached) {
         this.progress.stepReached = currentStep
       }
@@ -178,6 +186,7 @@ export default defineComponent({
 
   methods: {
     async submit (): Promise<void> {
+      this.advanceStep()
       const stepPrerequisites = this.stepPrerequisites
       const allPrerequisitesFullfilled = Object.values(stepPrerequisites).every(prerequisite => prerequisite)
       if (!allPrerequisitesFullfilled) return
@@ -191,14 +200,23 @@ export default defineComponent({
 
         const contestant: Contestant = response.data
         this.contestant = contestant
-        this.advanceStep()
       } catch (error) {
         console.error(error)
       }
     },
 
+    resetError (): void {
+      this.error = ''
+    },
+
     selectFile (): void {
-      const file = (this.$refs.fileInput as { files: Array<File> }).files[0]
+      const fileInput = (this.$refs.fileInput as HTMLInputElement & { files: Array<File> })
+      const file = fileInput.files[0]
+      if (!this.validateFileSize(file)) {
+        fileInput.value = ''
+        return
+      }
+
       this.form.profileImage = file
       this.profileImageDisplayURL = URL.createObjectURL(file)
     },
@@ -207,13 +225,16 @@ export default defineComponent({
       const nextStep = this.progress.currentStep + 1
       if (this.checkPrerequisites(nextStep)) {
         this.progress.currentStep++
-      } else {
-        this.triggerErrors()
       }
     },
 
-    triggerErrors (): void {
-      console.log('[triggerError]')
+    validateFileSize (file: File): boolean {
+      const KBInBytes = 1024
+      const MBInKB = 1024 * KBInBytes
+      const MAX_SIZE_IN_MB = 5
+      const sizeExceeding = file.size > MBInKB * MAX_SIZE_IN_MB
+      if (sizeExceeding) this.error = `Profile image should not exceed ${MAX_SIZE_IN_MB}MB`
+      return !sizeExceeding
     },
 
     checkPrerequisites (step: Exclude<Step, Step.Initial>): boolean {
