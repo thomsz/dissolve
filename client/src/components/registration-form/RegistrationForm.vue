@@ -15,7 +15,7 @@
       name="initial"
       :error-message="error"
     >
-      <template #description>Initial step</template>
+      <template #description>To start, please provide your email address</template>
       <input
         name="email"
         type="email"
@@ -32,7 +32,7 @@
       :error-message="error"
       @back="progress.currentStep--"
     >
-      <template #description>Personal details</template>
+      <template #description>And some personal details</template>
       <div class="flex items-center gap-2">
         <input
           id="male"
@@ -91,7 +91,7 @@
         Please select a profile picture
       </template>
       <div class="flex flex-col justify-center items-center h-full">
-        <div class="h-56 w-5/6 relative flex items-center justify-center bg-slate-100/25 border-4 border-slate-100 rounded-md">
+        <div class="h-44 w-44 relative flex items-center justify-center bg-slate-100/25 border-4 border-slate-100 rounded-md">
           <UploadIcon class="absolute w-16 mx-auto text-slate-200" />
           <input
             ref="fileInput"

@@ -1,7 +1,7 @@
 <template>
   <img
     alt="Profile image"
-    class="h-56 w-5/6 object-cover mx-auto rounded"
+    class="h-44 w-44 object-cover mx-auto rounded"
     :src="contestant.profileImage"
   />
   <p>

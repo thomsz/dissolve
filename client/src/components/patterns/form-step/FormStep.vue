@@ -1,6 +1,6 @@
 <template>
   <section class="flex flex-col flex-1">
-    <p>
+    <p class="mb-4 text-slate-500">
       <slot name="description"></slot>
     </p>
     <slot></slot>
