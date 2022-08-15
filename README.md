@@ -1,46 +1,39 @@
-# dissolve
+# Dissolve - Car Lottery
 
-This template should help get you started developing with Vue 3 in Vite.
+Dissolve is a simple car lottery registration app, based on Vue.js.
 
-## Recommended IDE Setup
+The app is currently designed for mobile use. Please refer to the bottom of the page for further improvements.
+A user can register and navigate back and forth between the registration steps. Refreshing the page loads unsaved data to the form.
+Some basic analytics are recorded as well.
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+## The stack
 
-## Type Support for `.vue` Imports in TS
+Frontend:
+- Vue.js 3 with Vite 
+- TypeScript
+- Axios
+- Tailwind
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
+Backend
+- Node.js
+- Express.js
 
-If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
+## Installations
 
-1. Disable the built-in TypeScript Extension
-    1) Run `Extensions: Show Built-in Extensions` from VSCode's command palette
-    2) Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
-2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+1. Clone
+2. From the root directory run `npm install` from the terminal
+3. Run `npm run install:all` to install both the front and the backend or install each one separately
+4. Create an `.env` file in `/client` and `/server` as described in the example files `/.env.example`. For this demo purpose you can just rename `.env.example` to `.env`
+5. From the root directory run `npm run start` to start both the front and the backend concurrently
+6. Visit the url logged to the terminal
 
-## Customize configuration
+Note that Vite supports Node.js versions 14.18+, 16+
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+## Further improvements and bugs
 
-## Project Setup
+Given a tight deadline, some things can be improved on at a later time. Things like:
 
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+- improvement: unit tests and E2E tests
+- improvement: desktop and tablet responsive design
+- feature: progress bar
+- known bug: resetting an application for the SECOND time crashes the app. To replicate: register once -> click on "Start a new application" -> register again. The second time you start an application will crash the app.
