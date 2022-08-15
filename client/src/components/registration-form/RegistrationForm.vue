@@ -16,7 +16,7 @@
       @field-blur="persistData"
     />
     <PersonalDetails
-      v-if="progress.currentStep === Step.PersonalDetails"
+      v-else-if="progress.currentStep === Step.PersonalDetails"
       v-model="form"
       @back="goBack"
       @field-blur="persistData"
@@ -37,6 +37,7 @@
 <script lang="ts">
 import get from 'lodash/get'
 import request from '@/services/request'
+import analytics, { EventLabel, AnalyticsEvent } from '@/services/analytics'
 import { defineComponent } from 'vue'
 import { Step, initialData } from '@/components/registration-form/form'
 import { getFormData, flattenObject, populateDataFromSessionStorage } from '@/services/data'
@@ -77,6 +78,11 @@ export default defineComponent({
       this.resetError()
       this.persistData('progress.currentStep')
 
+      analytics.track(AnalyticsEvent.Navigation, {
+        data: currentStep,
+        label: EventLabel.CurrentStep
+      })
+
       if (currentStep > this.progress.stepReached) {
         this.progress.stepReached = currentStep
         this.persistData('progress.stepReached')
@@ -94,20 +100,26 @@ export default defineComponent({
       this.advanceStep()
       const stepPrerequisites = this.stepPrerequisites
       const allPrerequisitesFullfilled = Object.values(stepPrerequisites).every(prerequisite => prerequisite)
-      if (!allPrerequisitesFullfilled) return
 
-      try {
-        const response = await request.post('/contestants', getFormData(this.form), {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
+      if (allPrerequisitesFullfilled && this.progress.currentStep === Step.SubmittingForm) {
+        try {
+          const response = await request.post('/contestants', getFormData(this.form), {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
 
-        const contestant: Contestant = response.data
-        this.contestant = contestant
-        this.persistData('contestant')
-      } catch (error) {
-        console.error(error)
+          const contestant: Contestant = response.data
+          this.contestant = contestant
+          this.persistData('contestant')
+
+          analytics.track(AnalyticsEvent.Contestant, {
+            data: contestant.id,
+            label: EventLabel.ContestantCreated,
+          })
+        } catch (error) {
+          console.error(error)
+        }
       }
     },
 
@@ -133,7 +145,7 @@ export default defineComponent({
     persistData (...keys: Array<string>): void {
       keys.forEach(key => {
         const value = get(this, key)
-        const preparedValue = typeof value === 'object' && !(value instanceof File)
+        const preparedValue = typeof value === 'object'
           ? JSON.stringify(value)
           : value
 
@@ -147,7 +159,6 @@ export default defineComponent({
 
     setProfileImageToDisplay (file: File): void {
       this.profileImageDisplayURL = URL.createObjectURL(file)
-      this.persistData('form.profileImage', 'profileImageDisplayURL')
     },
 
     resetDataFromSessionStorage (): void {

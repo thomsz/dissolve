@@ -18,7 +18,7 @@
           type="file"
           class="z-10 h-full w-full opacity-0"
           accept="image/*"
-          required
+          :required="!Boolean(form.profileImage)"
           @change="selectFile"
         />
         <img
@@ -91,6 +91,7 @@ export default defineComponent({
     selectFile (): void {
       const fileInput = (this.$refs.fileInput as HTMLInputElement & { files: Array<File> })
       const file = fileInput.files[0]
+
       if (!this.validateFileSize(file)) {
         fileInput.value = ''
         return
@@ -105,7 +106,7 @@ export default defineComponent({
       const MBInKB = 1024 * KBInBytes
       const MAX_SIZE_IN_MB = 5
       const sizeExceeding = file.size > MBInKB * MAX_SIZE_IN_MB
-      if (sizeExceeding) this.$emit('set-error', `Profile image should not exceed ${MAX_SIZE_IN_MB}MB`)
+      if (sizeExceeding) this.$emit('error', `Profile image should not exceed ${MAX_SIZE_IN_MB}MB`)
       return !sizeExceeding
     }
   }
